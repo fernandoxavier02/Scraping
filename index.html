@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Web Scraping Personalizável</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Web Scraping Personalizável</h1>
+        <form id="scraping-form">
+            <label for="url">URL do site a ser pesquisado:</label>
+            <input type="text" id="url" name="url" placeholder="https://exemplo.com" required>
+
+            <label for="query">Termo ou assunto a pesquisar (opcional):</label>
+            <input type="text" id="query" name="query" placeholder="Ex: Inteligência Artificial">
+
+            <label for="data-type">Tipo de informação a extrair:</label>
+            <select id="data-type" name="data-type" required>
+                <option value="titles">Títulos (h1, h2, h3...)</option>
+                <option value="paragraphs">Parágrafos</option>
+                <option value="links">Links</option>
+                <option value="images">Imagens</option>
+                <option value="custom">Customizado (CSS Selector)</option>
+            </select>
+
+            <div id="custom-selector-div" style="display:none;">
+                <label for="custom-selector">CSS Selector personalizado:</label>
+                <input type="text" id="custom-selector" name="custom-selector" placeholder=".classe, #id, tag">
+            </div>
+
+            <label for="output-format">Formato de apresentação:</label>
+            <select id="output-format" name="output-format" required>
+                <option value="table">Tabela</option>
+                <option value="list">Lista</option>
+                <option value="csv">Download CSV</option>
+                <option value="json">Download JSON</option>
+            </select>
+
+            <button type="submit">Executar Scraping</button>
+        </form>
+        <div id="results"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
