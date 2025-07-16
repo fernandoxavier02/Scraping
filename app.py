@@ -10,6 +10,16 @@ import os
 app = Flask(__name__)
 CORS(app)
 
+# 🐛 Debug: Log todas as requisições
+@app.before_request
+def log_request_info():
+    print(f"🔍 DEBUG: Requisição recebida:")
+    print(f"   - Método: {request.method}")
+    print(f"   - URL: {request.url}")
+    print(f"   - Path: {request.path}")
+    print(f"   - Headers: {dict(request.headers)}")
+    print(f"   - Data: {request.get_data()}")
+
 def extract_data(soup, data_type, custom_selector=None):
     results = []
     if data_type == 'titles':
@@ -42,16 +52,23 @@ def extract_data(soup, data_type, custom_selector=None):
                 results.append(text)
     return results
 
-# ✅ ROTAS ESPECÍFICAS PRIMEIRO
+# ✅ ROTA ESPECÍFICA PRIMEIRO
 @app.route('/scrape', methods=['POST'])
 def scrape():
+    print("🎯 DEBUG: Rota /scrape foi alcançada com sucesso!")
+    print(f"🎯 DEBUG: Método da requisição: {request.method}")
+    
     try:
         data = request.json
+        print(f"🎯 DEBUG: Dados JSON recebidos: {data}")
+        
         if not data:
+            print("❌ DEBUG: Nenhum dado JSON fornecido")
             return jsonify({'error': 'Dados JSON não fornecidos'}), 400
             
         url = data.get('url')
         if not url:
+            print("❌ DEBUG: URL não fornecida")
             return jsonify({'error': 'URL é obrigatória'}), 400
             
         query = data.get('query', '')
@@ -59,22 +76,36 @@ def scrape():
         custom_selector = data.get('custom_selector')
         output_format = data.get('output_format', 'table')
         
-        print(f"Processando scraping para: {url}")
+        print(f"✅ DEBUG: Configurações processadas:")
+        print(f"   - URL: {url}")
+        print(f"   - Query: {query}")
+        print(f"   - Data Type: {data_type}")
+        print(f"   - Output Format: {output_format}")
         
     except Exception as e:
+        print(f"❌ DEBUG: Erro ao processar dados: {str(e)}")
         return jsonify({'error': f'Erro ao processar dados: {str(e)}'}), 400
 
     try:
+        print(f"🌐 DEBUG: Iniciando scraping da URL: {url}")
         headers = {'User-Agent': 'Mozilla/5.0 (compatible; SunaBot/1.0)'}
         resp = requests.get(url, headers=headers, timeout=15)
         resp.raise_for_status()
+        print(f"✅ DEBUG: Resposta HTTP recebida: {resp.status_code}")
+        
         soup = BeautifulSoup(resp.text, 'html.parser')
+        print(f"✅ DEBUG: HTML parseado com sucesso")
 
         results = extract_data(soup, data_type, custom_selector)
+        print(f"✅ DEBUG: {len(results)} resultados extraídos")
+        
         if query:
+            original_count = len(results)
             results = [r for r in results if query.lower() in r.lower()]
+            print(f"✅ DEBUG: Filtro aplicado: {original_count} -> {len(results)} resultados")
 
         if output_format == 'csv':
+            print("📁 DEBUG: Gerando arquivo CSV")
             output = io.StringIO()
             writer = csv.writer(output)
             writer.writerow(['Resultado'])
@@ -88,6 +119,7 @@ def scrape():
                 download_name='resultados.csv'
             )
         elif output_format == 'json':
+            print("📁 DEBUG: Gerando arquivo JSON")
             return send_file(
                 io.BytesIO(json.dumps({'results': results}, ensure_ascii=False, indent=2).encode('utf-8')),
                 mimetype='application/json',
@@ -95,21 +127,34 @@ def scrape():
                 download_name='resultados.json'
             )
         else:
+            print("📋 DEBUG: Retornando resultados como JSON")
             return jsonify({'results': results})
+            
     except requests.exceptions.RequestException as e:
+        print(f"❌ DEBUG: Erro de requisição: {str(e)}")
         return jsonify({'error': f'Erro ao acessar URL: {str(e)}'}), 500
     except Exception as e:
-        print(f"Erro interno: {str(e)}")
+        print(f"❌ DEBUG: Erro interno: {str(e)}")
         return jsonify({'error': f'Erro interno do servidor: {str(e)}'}), 500
 
 # ✅ ROTAS GENÉRICAS DEPOIS
 @app.route('/')
 def index():
+    print("🏠 DEBUG: Rota / (index) foi alcançada")
     return send_from_directory('.', 'index.html')
 
 @app.route('/<path:filename>')
 def static_files(filename):
+    print(f"📁 DEBUG: Rota genérica /<path> foi alcançada para arquivo: {filename}")
     return send_from_directory('.', filename)
 
+# 🐛 Debug: Log de todas as rotas registradas
+@app.before_first_request
+def log_routes():
+    print("🗺️  DEBUG: Rotas registradas no Flask:")
+    for rule in app.url_map.iter_rules():
+        print(f"   - {rule.rule} -> {rule.methods} -> {rule.endpoint}")
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    print("🚀 DEBUG: Iniciando servidor Flask...")
+    app.run(host='0.0.0.0', port=5000, debug=True)
