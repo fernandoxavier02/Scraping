@@ -42,14 +42,7 @@ def extract_data(soup, data_type, custom_selector=None):
                 results.append(text)
     return results
 
-@app.route('/')
-def index():
-    return send_from_directory('.', 'index.html')
-
-@app.route('/<path:filename>')
-def static_files(filename):
-    return send_from_directory('.', filename)
-
+# ✅ ROTAS ESPECÍFICAS PRIMEIRO
 @app.route('/scrape', methods=['POST'])
 def scrape():
     try:
@@ -108,6 +101,15 @@ def scrape():
     except Exception as e:
         print(f"Erro interno: {str(e)}")
         return jsonify({'error': f'Erro interno do servidor: {str(e)}'}), 500
+
+# ✅ ROTAS GENÉRICAS DEPOIS
+@app.route('/')
+def index():
+    return send_from_directory('.', 'index.html')
+
+@app.route('/<path:filename>')
+def static_files(filename):
+    return send_from_directory('.', filename)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
